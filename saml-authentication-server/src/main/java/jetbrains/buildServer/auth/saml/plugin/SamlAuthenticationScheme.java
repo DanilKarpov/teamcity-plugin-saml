@@ -332,7 +332,7 @@ public class SamlAuthenticationScheme extends HttpAuthenticationSchemeAdapter {
     }
 
     public URL getCallbackUrl() throws MalformedURLException {
-        String result = WebUtil.combineContextPath(rootUrlHolder.getRootUrl(), SamlPluginConstants.SAML_CALLBACK_URL.replace("**", ""));
+        String result = WebUtil.combineContextPath("https://teamcity.local.playrix.com", SamlPluginConstants.SAML_CALLBACK_URL.replace("**", ""));
         if (result.startsWith("/")) {
             result = result.substring(1);
         }
