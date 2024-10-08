@@ -57,11 +57,15 @@ public class SamlLoginPageExtension extends SimplePageExtension {
     }
 
     public String getLoginUrl() {
-        String result = WebUtil.combineContextPath(rootUrlHolder.getRootUrl(), SamlPluginConstants.SAML_INITIATE_LOGIN_URL.replace("**", ""));
+        // Заменяем вызов rootUrlHolder.getRootUrl() на жестко закодированный URL
+        String result = WebUtil.combineContextPath("https://teamcity.local.playrix.com", SamlPluginConstants.SAML_INITIATE_LOGIN_URL.replace("**", ""));
+
+        // Убираем начальный слэш, если он есть
         if (result.startsWith("/")) {
             result = result.substring(1);
         }
 
         return result;
     }
+
 }
