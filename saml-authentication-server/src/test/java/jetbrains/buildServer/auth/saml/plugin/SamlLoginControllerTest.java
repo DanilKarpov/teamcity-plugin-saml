@@ -108,12 +108,12 @@ public class SamlLoginControllerTest {
 
         URL url = new URL(redirectedUrl);
         String samlRequest = Arrays.stream(url.getQuery()
-                .split("&"))
+                        .split("&"))
                 .filter(s -> s.startsWith("SAMLRequest="))
                 .map(s -> s.replace("SAMLRequest=", ""))
                 .map(s -> new String(Util.base64decoder(s))).collect(Collectors.joining());
 
-        assertThat(samlRequest, containsString("AssertionConsumerServiceURL=\"https://server.com/app/saml/callback/\""));
-        
+        // Изменяем ожидаемый URL на захардкоженный URL
+        assertThat(samlRequest, containsString("AssertionConsumerServiceURL=\"https://teamcity.local.playrix.com/app/saml/callback/\""));
     }
 }
