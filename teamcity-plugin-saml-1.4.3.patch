@@ -1,0 +1,80 @@
+From ea4326aac51ea7f02718dafc8fa2959ccb61d6fe Mon Sep 17 00:00:00 2001
+From: DanilKarpov <danil.karpov@playrix.com>
+Date: Mon, 28 Oct 2024 04:28:59 +0100
+Subject: [PATCH] [PATCH] patch teamcity-plugin-saml
+
+---
+ .../auth/saml/plugin/SamlAuthenticationScheme.java     | 10 +++++++++-
+ .../auth/saml/plugin/SamlLoginPageExtension.java       | 10 +++++++++-
+ 2 files changed, 18 insertions(+), 2 deletions(-)
+
+diff --git a/saml-authentication-server/src/main/java/jetbrains/buildServer/auth/saml/plugin/SamlAuthenticationScheme.java b/saml-authentication-server/src/main/java/jetbrains/buildServer/auth/saml/plugin/SamlAuthenticationScheme.java
+index 8875f29..c7de5f8 100755
+--- a/saml-authentication-server/src/main/java/jetbrains/buildServer/auth/saml/plugin/SamlAuthenticationScheme.java
++++ b/saml-authentication-server/src/main/java/jetbrains/buildServer/auth/saml/plugin/SamlAuthenticationScheme.java
+@@ -21,6 +21,7 @@ import jetbrains.buildServer.log.Loggers;
+ import jetbrains.buildServer.serverSide.auth.AuthModuleType;
+ import jetbrains.buildServer.serverSide.auth.LoginConfiguration;
+ import jetbrains.buildServer.serverSide.auth.ServerPrincipal;
++import jetbrains.buildServer.serverSide.TeamCityProperties;
+ import jetbrains.buildServer.users.SUser;
+ import jetbrains.buildServer.users.UserModel;
+ import jetbrains.buildServer.users.impl.UserEx;
+@@ -332,7 +333,9 @@ public class SamlAuthenticationScheme extends HttpAuthenticationSchemeAdapter {
+     }
+ 
+     public URL getCallbackUrl() throws MalformedURLException {
+-        String result = WebUtil.combineContextPath(rootUrlHolder.getRootUrl(), SamlPluginConstants.SAML_CALLBACK_URL.replace("**", ""));
++        String rootUrl = applyViewUrlOverride(rootUrlHolder.getRootUrl());
++        String result = WebUtil.combineContextPath(rootUrl, SamlPluginConstants.SAML_CALLBACK_URL.replace("**", ""));
++
+         if (result.startsWith("/")) {
+             result = result.substring(1);
+         }
+@@ -340,6 +343,11 @@ public class SamlAuthenticationScheme extends HttpAuthenticationSchemeAdapter {
+         return new URL(result);
+     }
+ 
++    private String applyViewUrlOverride(String url) {
++        String overrideUrl = TeamCityProperties.getPropertyOrNull("teamcity.saml.overrideServerUrl");
++        return (overrideUrl != null) ? overrideUrl : url;
++    }
++
+     public Saml2Settings buildSettings() throws IOException {
+         var pluginSettings = settingsStorage.load();
+ 
+diff --git a/saml-authentication-server/src/main/java/jetbrains/buildServer/auth/saml/plugin/SamlLoginPageExtension.java b/saml-authentication-server/src/main/java/jetbrains/buildServer/auth/saml/plugin/SamlLoginPageExtension.java
+index f4c3c2b..91d0b4e 100755
+--- a/saml-authentication-server/src/main/java/jetbrains/buildServer/auth/saml/plugin/SamlLoginPageExtension.java
++++ b/saml-authentication-server/src/main/java/jetbrains/buildServer/auth/saml/plugin/SamlLoginPageExtension.java
+@@ -3,6 +3,7 @@ package jetbrains.buildServer.auth.saml.plugin;
+ import jetbrains.buildServer.RootUrlHolder;
+ import jetbrains.buildServer.auth.saml.plugin.pojo.SamlPluginSettings;
+ import jetbrains.buildServer.serverSide.auth.LoginConfiguration;
++import jetbrains.buildServer.serverSide.TeamCityProperties;
+ import jetbrains.buildServer.web.openapi.PagePlaces;
+ import jetbrains.buildServer.web.openapi.PlaceId;
+ import jetbrains.buildServer.web.openapi.PluginDescriptor;
+@@ -57,11 +58,18 @@ public class SamlLoginPageExtension extends SimplePageExtension {
+     }
+ 
+     public String getLoginUrl() {
+-        String result = WebUtil.combineContextPath(rootUrlHolder.getRootUrl(), SamlPluginConstants.SAML_INITIATE_LOGIN_URL.replace("**", ""));
++        String rootUrl = applyViewUrlOverride(rootUrlHolder.getRootUrl());
++        String result = WebUtil.combineContextPath(rootUrl, SamlPluginConstants.SAML_INITIATE_LOGIN_URL.replace("**", ""));
++
+         if (result.startsWith("/")) {
+             result = result.substring(1);
+         }
+ 
+         return result;
+     }
++
++    private String applyViewUrlOverride(String url) {
++        String overrideUrl = TeamCityProperties.getPropertyOrNull("teamcity.saml.overrideServerUrl");
++        return (overrideUrl != null) ? overrideUrl : url;
++    }
+ }
+-- 
+2.41.0
+
