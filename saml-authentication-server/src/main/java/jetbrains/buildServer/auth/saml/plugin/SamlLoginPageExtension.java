@@ -3,6 +3,7 @@ package jetbrains.buildServer.auth.saml.plugin;
 import jetbrains.buildServer.RootUrlHolder;
 import jetbrains.buildServer.auth.saml.plugin.pojo.SamlPluginSettings;
 import jetbrains.buildServer.serverSide.auth.LoginConfiguration;
+import jetbrains.buildServer.serverSide.TeamCityProperties;
 import jetbrains.buildServer.web.openapi.PagePlaces;
 import jetbrains.buildServer.web.openapi.PlaceId;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
@@ -57,11 +58,18 @@ public class SamlLoginPageExtension extends SimplePageExtension {
     }
 
     public String getLoginUrl() {
-        String result = WebUtil.combineContextPath(rootUrlHolder.getRootUrl(), SamlPluginConstants.SAML_INITIATE_LOGIN_URL.replace("**", ""));
+        String rootUrl = applyViewUrlOverride(rootUrlHolder.getRootUrl());
+        String result = WebUtil.combineContextPath(rootUrl, SamlPluginConstants.SAML_INITIATE_LOGIN_URL.replace("**", ""));
+
         if (result.startsWith("/")) {
             result = result.substring(1);
         }
 
         return result;
+    }
+
+    private String applyViewUrlOverride(String url) {
+        String overrideUrl = TeamCityProperties.getPropertyOrNull("teamcity.saml.overrideServerUrl");
+        return (overrideUrl != null) ? overrideUrl : url;
     }
 }

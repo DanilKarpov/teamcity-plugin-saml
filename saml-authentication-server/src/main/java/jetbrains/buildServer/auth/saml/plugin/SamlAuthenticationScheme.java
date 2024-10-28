@@ -21,6 +21,7 @@ import jetbrains.buildServer.log.Loggers;
 import jetbrains.buildServer.serverSide.auth.AuthModuleType;
 import jetbrains.buildServer.serverSide.auth.LoginConfiguration;
 import jetbrains.buildServer.serverSide.auth.ServerPrincipal;
+import jetbrains.buildServer.serverSide.TeamCityProperties;
 import jetbrains.buildServer.users.SUser;
 import jetbrains.buildServer.users.UserModel;
 import jetbrains.buildServer.users.impl.UserEx;
@@ -332,12 +333,19 @@ public class SamlAuthenticationScheme extends HttpAuthenticationSchemeAdapter {
     }
 
     public URL getCallbackUrl() throws MalformedURLException {
-        String result = WebUtil.combineContextPath(rootUrlHolder.getRootUrl(), SamlPluginConstants.SAML_CALLBACK_URL.replace("**", ""));
+        String rootUrl = applyViewUrlOverride(rootUrlHolder.getRootUrl());
+        String result = WebUtil.combineContextPath(rootUrl, SamlPluginConstants.SAML_CALLBACK_URL.replace("**", ""));
+
         if (result.startsWith("/")) {
             result = result.substring(1);
         }
 
         return new URL(result);
+    }
+
+    private String applyViewUrlOverride(String url) {
+        String overrideUrl = TeamCityProperties.getPropertyOrNull("teamcity.saml.overrideServerUrl");
+        return (overrideUrl != null) ? overrideUrl : url;
     }
 
     public Saml2Settings buildSettings() throws IOException {
